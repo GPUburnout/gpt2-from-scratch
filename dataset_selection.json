@@ -1,0 +1,9 @@
+{
+  "name": "tiny_shakespeare",
+  "config": null,
+  "description": "Complete works of Shakespeare, ~1M characters. Classic tiny dataset.",
+  "size": "Tiny (~1 MB)",
+  "date_selected": "2026-01-23 22:42:21",
+  "purpose": "Training tiny language model - First run with Claude Code",
+  "from_where": "https://huggingface.co/datasets/tiny_shakespeare"
+}

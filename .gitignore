@@ -1,0 +1,38 @@
+# Large data files
+data/
+*.txt
+
+# Model weights (large binary files)
+*.pth
+*.pt
+*.bin
+*.h5
+*.ckpt
+
+# Checkpoints
+checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+.env
+venv/
+env/
+
+# Hugging Face cache
+.cache/
+
+# IDE settings
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
