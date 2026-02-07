@@ -1,0 +1,13 @@
+{
+  "vocab_size": 65,
+  "embed_dim": 256,
+  "num_heads": 4,
+  "num_layers": 4,
+  "ff_dim": 1024,
+  "max_seq_len": 256,
+  "dropout": 0.1,
+  "total_parameters": 3258368,
+  "tokenizer_type": "character",
+  "model_name": "tiny_shakespeare",
+  "description": "Phase 1 model trained on Shakespeare text (character-level)"
+}

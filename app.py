@@ -7,23 +7,31 @@ import gradio as gr
 import torch
 import torch.nn.functional as F
 from model import TransformerLanguageModel
-from tokenizer_bpe import BPETokenizer
 import json
 import os
 
-# Load model and tokenizer
+# Model directory
+MODEL_DIR = "checkpoint"
+
 def load_model():
     """Load the trained model and tokenizer"""
-    model_dir = "checkpoint"  # Will contain uploaded model files
-
     # Load config
-    config_path = os.path.join(model_dir, "config.json")
+    config_path = os.path.join(MODEL_DIR, "config.json")
     with open(config_path, "r") as f:
         config = json.load(f)
 
-    # Load tokenizer
-    tokenizer = BPETokenizer()
-    tokenizer.load(os.path.join(model_dir, "tokenizer.json"))
+    # Load tokenizer based on type
+    tokenizer_type = config.get("tokenizer_type", "character")
+    tokenizer_path = os.path.join(MODEL_DIR, "tokenizer.json")
+
+    if tokenizer_type == "bpe":
+        from tokenizer_bpe import BPETokenizer
+        tokenizer = BPETokenizer()
+        tokenizer.load(tokenizer_path)
+    else:
+        from tokenizer import CharacterTokenizer
+        tokenizer = CharacterTokenizer()
+        tokenizer.load(tokenizer_path)
 
     # Create model
     model = TransformerLanguageModel(
@@ -37,20 +45,23 @@ def load_model():
     )
 
     # Load weights
-    model.load_state_dict(
-        torch.load(os.path.join(model_dir, "pytorch_model.bin"), map_location="cpu")
-    )
+    model_path = os.path.join(MODEL_DIR, "pytorch_model.bin")
+    model.load_state_dict(torch.load(model_path, map_location="cpu"))
     model.eval()
 
     return model, tokenizer, config
 
-# Generate text
-def generate(prompt, max_tokens=100, temperature=0.8, top_k=40):
+
+def generate(model, tokenizer, prompt, max_tokens=100, temperature=0.8, top_k=40):
     """Generate text from prompt"""
     if not prompt.strip():
         return "Please enter a prompt."
 
+    # Encode prompt
     tokens = tokenizer.encode(prompt)
+    if len(tokens) == 0:
+        return "Could not encode prompt. Try different characters."
+
     tokens = torch.tensor(tokens, dtype=torch.long).unsqueeze(0)
 
     with torch.no_grad():
@@ -77,28 +88,38 @@ def generate(prompt, max_tokens=100, temperature=0.8, top_k=40):
 
     return tokenizer.decode(tokens[0].tolist())
 
-# Try to load model (will fail locally without checkpoint, but works on HF Spaces)
+
+# Try to load model
 try:
     model, tokenizer, config = load_model()
     model_loaded = True
-    model_info = f"GPT-2 Small ({config.get('total_parameters', 134000000):,} params)"
+    model_name = config.get("model_name", "unknown")
+    param_count = config.get("total_parameters", 0)
+    tokenizer_type = config.get("tokenizer_type", "character")
+    model_info = f"{model_name} ({param_count:,} params, {tokenizer_type} tokenizer)"
 except Exception as e:
     model_loaded = False
     model_info = f"Model not loaded: {e}"
+    model = None
+    tokenizer = None
+
 
 def generate_wrapper(prompt, max_tokens, temperature, top_k):
     if not model_loaded:
-        return "Model not loaded. Deploy to HuggingFace Spaces with checkpoint files."
-    return generate(prompt, int(max_tokens), temperature, int(top_k))
+        return "Model not loaded. Please check the checkpoint folder."
+    return generate(model, tokenizer, prompt, int(max_tokens), temperature, int(top_k))
+
 
 # Gradio interface
-with gr.Blocks(title="GPT-2 From Scratch") as demo:
+with gr.Blocks(title="GPT From Scratch Demo", theme=gr.themes.Soft()) as demo:
     gr.Markdown(
         """
-        # GPT-2 From Scratch Demo
+        # GPT From Scratch Demo
 
-        This model was trained from scratch on 12GB of conversational data.
-        134M parameters, 10 epochs, ~50 hours on A100.
+        This is the **Phase 1 model** — a tiny transformer trained on Shakespeare text.
+        3.2M parameters, character-level tokenizer.
+
+        *The full 134M parameter GPT-2 Small is coming soon!*
 
         [Read the blog](https://gpuburnout.github.io/llm-journey/) |
         [View the code](https://github.com/GPUburnout/gpt2-from-scratch)
@@ -106,46 +127,56 @@ with gr.Blocks(title="GPT-2 From Scratch") as demo:
     )
 
     with gr.Row():
-        with gr.Column():
+        with gr.Column(scale=1):
             prompt = gr.Textbox(
                 label="Enter your prompt",
-                placeholder="What is the capital of France?",
-                lines=3
+                placeholder="ROMEO:",
+                lines=2,
+                value="ROMEO:"
             )
 
             with gr.Row():
                 max_tokens = gr.Slider(
-                    minimum=10, maximum=200, value=100, step=10,
-                    label="Max tokens"
+                    minimum=50, maximum=500, value=200, step=50,
+                    label="Max characters"
                 )
                 temperature = gr.Slider(
                     minimum=0.1, maximum=1.5, value=0.8, step=0.1,
-                    label="Temperature"
-                )
-                top_k = gr.Slider(
-                    minimum=1, maximum=100, value=40, step=1,
-                    label="Top-K"
+                    label="Temperature (higher = more creative)"
                 )
 
-            generate_btn = gr.Button("Generate", variant="primary")
+            top_k = gr.Slider(
+                minimum=1, maximum=65, value=40, step=1,
+                label="Top-K sampling"
+            )
 
-        with gr.Column():
-            output = gr.Textbox(label="Generated text", lines=10)
+            generate_btn = gr.Button("Generate", variant="primary", size="lg")
+
+        with gr.Column(scale=1):
+            output = gr.Textbox(label="Generated text", lines=15, show_copy_button=True)
 
     gr.Markdown(f"**Model:** {model_info}")
 
-    # Example prompts
+    # Example prompts for Shakespeare
     gr.Examples(
         examples=[
-            ["What is the capital of France?"],
-            ["Explain machine learning in simple terms."],
-            ["Write a poem about coffee."],
-            ["The meaning of life is"],
+            ["ROMEO:"],
+            ["JULIET:"],
+            ["To be, or not to be"],
+            ["First Citizen:"],
+            ["KING HENRY:"],
         ],
-        inputs=prompt
+        inputs=prompt,
+        label="Try these Shakespeare prompts"
     )
 
     generate_btn.click(
+        generate_wrapper,
+        inputs=[prompt, max_tokens, temperature, top_k],
+        outputs=output
+    )
+
+    prompt.submit(
         generate_wrapper,
         inputs=[prompt, max_tokens, temperature, top_k],
         outputs=output
