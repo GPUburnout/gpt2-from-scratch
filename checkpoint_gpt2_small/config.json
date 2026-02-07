@@ -1,0 +1,13 @@
+{
+  "vocab_size": 32000,
+  "embed_dim": 768,
+  "num_heads": 12,
+  "num_layers": 12,
+  "ff_dim": 3072,
+  "max_seq_len": 512,
+  "dropout": 0.1,
+  "model_type": "TransformerLanguageModel",
+  "architecture": "gpt2_small",
+  "total_parameters": 134601216,
+  "tokenizer_type": "bpe"
+}

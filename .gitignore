@@ -24,16 +24,27 @@ env/
 *.bin.gz
 datasets_cache/
 
-# Large model checkpoints (but allow checkpoint/ folder for demo)
+# Large model checkpoints
 trained_model/
 checkpoints/
 models/
 *.pth
 *.pt
 
-# Allow the demo checkpoint folder
-!checkpoint/
-!checkpoint/*
+# Allow the demo checkpoint folders (small models only for GitHub)
+!checkpoint_tiny/
+!checkpoint_tiny/*
+!checkpoint_medium/
+!checkpoint_medium/*
+# GPT-2 Small config and tokenizer only (model too large for GitHub)
+!checkpoint_gpt2_small/
+!checkpoint_gpt2_small/config.json
+!checkpoint_gpt2_small/tokenizer.json
+!checkpoint_gpt2_small/NOTE.txt
+
+# Exclude large files (>100MB GitHub limit)
+**/optimizer_state.bin
+checkpoint_gpt2_small/pytorch_model.bin
 
 # Jupyter
 .ipynb_checkpoints/
@@ -41,7 +52,3 @@ models/
 # OS
 .DS_Store
 Thumbs.db
-
-# Tokenizer outputs (but allow checkpoint folder)
-*_tokenizer.json
-*_metadata.json

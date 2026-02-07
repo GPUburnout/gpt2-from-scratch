@@ -1,0 +1,4 @@
+This model is from checkpoint_epoch_7 (not the final model).
+
+Training was still in progress - this represents ~70% through training.
+Final model would be checkpoint_epoch_10.
