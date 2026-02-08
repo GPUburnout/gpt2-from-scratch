@@ -23,7 +23,7 @@ MODELS = {
     },
     "GPT-2 Small (134M params)": {
         "path": "checkpoint_gpt2_small",
-        "description": "Phase 3: BPE tokenizer, 12GB data (checkpoint 7 of 10)"
+        "description": "Phase 3: BPE tokenizer, 12GB data, epoch 11 (final)"
     }
 }
 

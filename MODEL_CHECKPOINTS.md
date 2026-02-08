@@ -76,11 +76,10 @@ This document summarizes the model checkpoints from the GPT-2 training journey.
 | Model File Size | ~515 MB |
 
 **Notes:**
-- This is checkpoint 7 of 10 (approximately 70% through training)
-- Final model would be checkpoint_epoch_10
+- Final checkpoint (epoch 11) - training complete
 - Uses BPE tokenization instead of character-level
-- Trained on 12GB dataset
-- Model file too large for GitHub (>100MB limit) - hosted separately
+- Trained on 12GB dataset (2.8B tokens)
+- Model file too large for GitHub (>100MB limit) - hosted on HuggingFace
 
 ---
 
