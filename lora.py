@@ -54,11 +54,15 @@ class LoRALinear(nn.Module):
 
         d_out, d_in = original_linear.weight.shape
 
-        # LoRA matrices
+        # Get device and dtype from original layer (important for GPU compatibility)
+        device = original_linear.weight.device
+        dtype = original_linear.weight.dtype
+
+        # LoRA matrices - create on same device as original layer
         # A: initialized with small random values
         # B: initialized to zero (so LoRA starts as identity)
-        self.lora_A = nn.Parameter(torch.zeros(rank, d_in))
-        self.lora_B = nn.Parameter(torch.zeros(d_out, rank))
+        self.lora_A = nn.Parameter(torch.zeros(rank, d_in, device=device, dtype=dtype))
+        self.lora_B = nn.Parameter(torch.zeros(d_out, rank, device=device, dtype=dtype))
 
         # Initialize A with Kaiming uniform (as in original LoRA paper)
         nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
